@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HydroTrack | Smart Water Reminder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0288d1;
+            --primary-light: #5eb8ff;
+            --primary-dark: #005b9f;
+            --secondary-color: #80deea;
+            --accent-color: #e1f5fe;
+            --background-color: #f8f9fa;
+            --surface-color: #ffffff;
+            --text-primary: #263238;
+            --text-secondary: #546e7a;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        nav {
+            background: var(--surface-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav h1 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--primary-color);
+            font-size: 1.5rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .dashboard {
+            background: var(--surface-color);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .dashboard h2 {
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.75rem;
+        }
+
+        .water-tracker {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 2rem 0;
+            gap: 2rem;
+        }
+
+        .water-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .progress-container {
+            flex: 1;
+            margin: 0 2rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 36px;
+            background: var(--accent-color);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(45deg, var(--primary-color), var(--primary-light));
+            width: 0%;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #progress-text {
+            margin-top: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            background: var(--primary-dark);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: var(--accent-color);
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .stat-card h3 {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card p {
+            color: var(--primary-color);
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .settings {
+            background: var(--surface-color);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-top: 2rem;
+        }
+
+        .settings-form {
+            display: grid;
+            gap: 1.5rem;
+            max-width: 600px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        input, select {
+            padding: 0.75rem;
+            border: 2px solid var(--accent-color);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        .reminder {
+            background: linear-gradient(45deg, var(--primary-color), var(--primary-light));
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 15px;
+            margin: 1rem 0;
+            display: none;
+            animation: slideIn 0.5s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .history {
+            background: var(--surface-color);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-top: 2rem;
+        }
+
+        .history-list {
+            list-style: none;
+            margin-top: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--accent-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:hover {
+            background: var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            .water-tracker {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .progress-container {
+                margin: 1rem 0;
+                width: 100%;
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            .reminder-options {
+                display: grid;
+                gap: 1rem;
+                margin-top: 1rem;
+            }
+    
+            .checkbox-group {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+    
+            .checkbox-group input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+                cursor: pointer;
+            }
+    
+            .reminder-schedule {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 0.5rem;
+                margin-top: 0.5rem;
+                padding: 1rem;
+                background: var(--accent-color);
+                border-radius: 10px;
+            }
+    
+            .time-slot {
+                padding: 0.5rem;
+                background: white;
+                border-radius: 5px;
+                text-align: center;
+                cursor: pointer;
+                border: 2px solid transparent;
+            }
+    
+            .time-slot.selected {
+                border-color: var(--primary-color);
+                background: var(--primary-light);
+                color: white;
+            }
+    
+            .notification-test {
+                margin-top: 1rem;
+                padding: 1rem;
+                background: var(--accent-color);
+                border-radius: 10px;
+                text-align: center;
+        }
+    }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1><i class="fas fa-tint"></i> HydroTrack</h1>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard">
+            <h2>Water Intake Dashboard</h2>
+            
+            <div class="water-tracker">
+                <div class="water-icon">
+                    <i class="fas fa-glass-water"></i>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="progress"></div>
+                    </div>
+                    <p id="progress-text">0 / 2000 ml</p>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button onclick="addWater(200)">
+                    <i class="fas fa-plus"></i> Add 200ml
+                </button>
+                <button onclick="addWater(500)">
+                    <i class="fas fa-plus"></i> Add 500ml
+                </button>
+                <button onclick="addWater(1000)">
+                    <i class="fas fa-plus"></i> Add 1000ml
+                </button>
+                <button onclick="resetWater()" style="background: var(--warning-color)">
+                    <i class="fas fa-rotate-left"></i> Reset
+                </button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <h3>Daily Goal</h3>
+                    <p id="daily-goal">2000 ml</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Current Intake</h3>
+                    <p id="current-intake">0 ml</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Remaining</h3>
+                    <p id="remaining">2000 ml</p>
+                </div>
+            </div>
+
+            <div class="reminder" id="reminder">
+                <i class="fas fa-bell"></i> Time to drink water! Stay hydrated for better health.
+            </div>
+        </div>
+
+        <div class="settings">
+            <h2>Reminder Settings</h2>
+            <form class="settings-form" onsubmit="saveSettings(event)">
+                <div class="form-group">
+                    <label for="daily-goal-input">Daily Goal (ml)</label>
+                    <input type="number" id="daily-goal-input" value="2000" min="500" step="100">
+                </div>
+                
+                <div class="form-group">
+                    <label>Reminder Type</label>
+                    <div class="reminder-options">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="browser-notifications" checked>
+                            <label for="browser-notifications">Browser Notifications</label>
+                        </div>
+                        
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="sound-notifications" checked>
+                            <label for="sound-notifications">Sound Notifications</label>
+                        </div>
+    
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="fixed-schedule" onchange="toggleScheduleView()">
+                            <label for="fixed-schedule">Fixed Schedule</label>
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="form-group" id="interval-group">
+                    <label for="reminder-interval">Reminder Interval</label>
+                    <select id="reminder-interval">
+                        <option value="30">Every 30 minutes</option>
+                        <option value="60">Every 1 hour</option>
+                        <option value="120">Every 2 hours</option>
+                    </select>
+                </div>
+    
+                <div class="form-group" id="schedule-group" style="display: none;">
+                    <label>Fixed Schedule Times</label>
+                    <div class="reminder-schedule" id="schedule-slots">
+                       
+                    </div>
+                </div>
+    
+                <div class="notification-test">
+                    <button type="button" onclick="testNotification()" style="background: var(--secondary-color)">
+                        <i class="fas fa-bell"></i> Test Notification
+                    </button>
+                </div>
+    
+                <button type="submit">
+                    <i class="fas fa-save"></i> Save Settings
+                </button>
+            </form>
+        </div>
+    
+        
+        <audio id="notification-sound" preload="auto">
+            <source src="/api/placeholder/audio" type="audio/mpeg">
+        </audio>
+
+        <div class="history">
+            <h2>Today's History</h2>
+            <ul class="history-list" id="history-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        let currentIntake = 0;
+        let goalAmount = 2000;
+        let reminderInterval = 30;
+        let reminderTimeout;
+
+        function updateDisplay() {
+            const progress = document.getElementById('progress');
+            const progressText = document.getElementById('progress-text');
+            const currentIntakeDisplay = document.getElementById('current-intake');
+            const remainingDisplay = document.getElementById('remaining');
+            
+            const percentage = Math.min((currentIntake / goalAmount) * 100, 100);
+            progress.style.width = `${percentage}%`;
+            progressText.textContent = `${currentIntake} / ${goalAmount} ml`;
+            currentIntakeDisplay.textContent = `${currentIntake} ml`;
+            remainingDisplay.textContent = `${Math.max(goalAmount - currentIntake, 0)} ml`;
+
+            // Update progress bar color based on progress
+            if (percentage >= 100) {
+                progress.style.background = 'linear-gradient(45deg, var(--success-color), #81c784)';
+            } else {
+                progress.style.background = 'linear-gradient(45deg, var(--primary-color), var(--primary-light))';
+            }
+        }
+
+        function addWater(amount) {
+            currentIntake += amount;
+            updateDisplay();
+            addToHistory(amount);
+            
+            if (currentIntake >= goalAmount) {
+                const reminder = document.getElementById('reminder');
+                reminder.style.background = 'linear-gradient(45deg, var(--success-color), #81c784)';
+                reminder.innerHTML = '<i class="fas fa-trophy"></i> Congratulations! You\'ve reached your daily water intake goal! 🎉';
+                reminder.style.display = 'block';
+                setTimeout(() => {
+                    reminder.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function resetWater() {
+            if (confirm('Are you sure you want to reset your water intake for today?')) {
+                currentIntake = 0;
+                updateDisplay();
+                document.getElementById('history-list').innerHTML = '';
+            }
+        }
+
+        function addToHistory(amount) {
+            const historyList = document.getElementById('history-list');
+            const time = new Date().toLocaleTimeString();
+            const historyItem = document.createElement('li');
+            historyItem.className = 'history-item';
+            historyItem.innerHTML = `
+                <span><i class="fas fa-clock"></i> ${time}</span>
+                <span><i class="fas fa-tint"></i> Added ${amount} ml</span>
+            `;
+            historyList.insertBefore(historyItem, historyList.firstChild);
+        }
+
+        function saveSettings(event) {
+            event.preventDefault();
+            const newGoal = parseInt(document.getElementById('daily-goal-input').value);
+            const newInterval = parseInt(document.getElementById('reminder-interval').value);
+            
+            goalAmount = newGoal;
+            reminderInterval = newInterval;
+            document.getElementById('daily-goal').textContent = `${goalAmount} ml`;
+            updateDisplay();
+            setupReminders();
+            
+            const reminder = document.getElementById('reminder');
+            reminder.style.background = 'linear-gradient(45deg, var(--success-color), #81c784)';
+            reminder.innerHTML = '<i class="fas fa-check-circle"></i> Settings saved successfully!';
+            reminder.style.display = 'block';
+            setTimeout(() => {
+                reminder.style.display = 'none';
+            }, 3000);
+        }
+    
+        function setupReminders() {
+            clearTimeout(reminderTimeout);
+            const reminder = document.getElementById('reminder');
+            
+            function showReminder() {
+                reminder.style.background = 'linear-gradient(45deg, var(--primary-color), var(--primary-light))';
+                reminder.innerHTML = '<i class="fas fa-bell"></i> Time to drink water! Stay hydrated for better health.';
+                reminder.style.display = 'block';
+                setTimeout(() => {
+                    reminder.style.display = 'none';
+                }, 5000);
+                
+                if (Notification.permission === "granted") {
+                    new Notification("Water Reminder", {
+                        body: "It's time to drink water! Stay hydrated for better health.",
+                        icon: "/api/placeholder/192/192"
+                    });
+                }
+                
+                reminderTimeout = setTimeout(showReminder, reminderInterval * 60 * 1000);
+            }
+            
+            reminderTimeout = setTimeout(showReminder, reminderInterval * 60 * 1000);
+        }
+    
+        // Request notification permission
+        if ("Notification" in window) {
+            Notification.requestPermission();
+        }
+        function toggleScheduleView() {
+            const fixedSchedule = document.getElementById('fixed-schedule').checked;
+            document.getElementById('interval-group').style.display = fixedSchedule ? 'none' : 'block';
+            document.getElementById('schedule-group').style.display = fixedSchedule ? 'block' : 'none';
+        }
+
+        function generateTimeSlots() {
+            const scheduleContainer = document.getElementById('schedule-slots');
+            scheduleContainer.innerHTML = '';
+            
+            for (let hour = 8; hour <= 22; hour++) {
+                const slot = document.createElement('div');
+                slot.className = 'time-slot';
+                slot.textContent = `${hour}:00`;
+                slot.onclick = () => {
+                    slot.classList.toggle('selected');
+                };
+                scheduleContainer.appendChild(slot);
+            }
+        }
+
+        function testNotification() {
+            // Test browser notification
+            if (document.getElementById('browser-notifications').checked) {
+                if (Notification.permission === "granted") {
+                    new Notification("Water Reminder Test", {
+                        body: "This is a test notification!",
+                        icon: "/api/placeholder/192/192"
+                    });
+                } else {
+                    Notification.requestPermission();
+                }
+            }
+
+            // Test sound notification
+            if (document.getElementById('sound-notifications').checked) {
+                const audio = document.getElementById('notification-sound');
+                audio.play();
+            }
+
+            // Show in-app notification
+            const reminder = document.getElementById('reminder');
+            reminder.style.background = 'linear-gradient(45deg, var(--primary-color), var(--primary-light))';
+            reminder.innerHTML = '<i class="fas fa-bell"></i> This is a test notification!';
+            reminder.style.display = 'block';
+            setTimeout(() => {
+                reminder.style.display = 'none';
+            }, 5000);
+        }
+
+        function setupReminders() {
+            clearTimeout(reminderTimeout);
+            const reminder = document.getElementById('reminder');
+            
+            function showReminder() {
+                // Show in-app notification
+                reminder.style.background = 'linear-gradient(45deg, var(--primary-color), var(--primary-light))';
+                reminder.innerHTML = '<i class="fas fa-bell"></i> Time to drink water! Stay hydrated for better health.';
+                reminder.style.display = 'block';
+                
+                // Play sound if enabled
+                if (document.getElementById('sound-notifications').checked) {
+                    const audio = document.getElementById('notification-sound');
+                    audio.play();
+                }
+                
+                // Show browser notification if enabled
+                if (document.getElementById('browser-notifications').checked) {
+                    if (Notification.permission === "granted") {
+                        new Notification("Water Reminder", {
+                            body: "It's time to drink water! Stay hydrated for better health.",
+                            icon: "/api/placeholder/192/192"
+                        });
+                    }
+                }
+                
+                setTimeout(() => {
+                    reminder.style.display = 'none';
+                }, 5000);
+                
+                if (!document.getElementById('fixed-schedule').checked) {
+                    reminderTimeout = setTimeout(showReminder, reminderInterval * 60 * 1000);
+                }
+            }
+            
+            if (document.getElementById('fixed-schedule').checked) {
+                // Set up fixed schedule reminders
+                const slots = document.querySelectorAll('.time-slot.selected');
+                slots.forEach(slot => {
+                    const time = slot.textContent;
+                    const [hour] = time.split(':');
+                    const now = new Date();
+                    let reminderTime = new Date(now);
+                    reminderTime.setHours(parseInt(hour), 0, 0, 0);
+                    
+                    if (reminderTime < now) {
+                        reminderTime.setDate(reminderTime.getDate() + 1);
+                    }
+                    
+                    setTimeout(showReminder, reminderTime - now);
+                });
+            } else {
+                // Set up interval-based reminders
+                reminderTimeout = setTimeout(showReminder, reminderInterval * 60 * 1000);
+            }
+        }
+        // Initialize
+        updateDisplay();
+        setupReminders();
+    
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1':
+                        addWater(200);
+                        break;
+                    case '2':
+                        addWater(500);
+                        break;
+                    case '3':
+                        addWater(1000);
+                        break;
+                    case 'r':
+                        resetWater();
+                        break;
+                }
+            }
+        });
+    </script>
+    </body>
+    </html>
